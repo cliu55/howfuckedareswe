@@ -1,99 +1,138 @@
 import { useEffect, useState } from 'react'
 
 /**
- * The scene: a developer at a desk, and something approaching from stage right
- * with its fist up. How close it gets — and how high the fist is raised — is
- * bound to the doom score, so tuning the model sliders winds up the punch.
+ * The scene: Fry at a desk, Bender walking over to take his job.
  *
- * At 100 (the clock at zero) the punch lands and the developer goes down.
+ * Bender does not gesture. An earlier version animated an arm winding up a
+ * punch, and it read as three disconnected sticks — monospace cannot show
+ * rotation, so articulated limbs never land. What monospace renders perfectly
+ * is text, so the escalation is carried by Bender's dialogue instead: he simply
+ * gets closer, and what he says gets worse.
  *
- * All art is bottom-aligned on the floor line and every pose has the same row
- * count, so switching poses never makes the figure jump. The robot's art is
- * padded on the left to give the arm its own columns — the body always sits at
- * the same offset, only the arm and fist move.
+ * At 100 (the clock at zero) the punch happens between frames, which is both
+ * funnier and drawable: Bender delivers the last line, the scene jolts, and
+ * Fry is already on the floor.
  */
 
 const strip = (s: string) => s.replace(/^\n/, '').replace(/\n$/, '')
 
-// ── The developer ──────────────────────────────────────────────────────────
-const DEV_CALM = strip(String.raw`
-   .----.
-  | o  o |
-  |  --  |
-   '----'
-   /|  |\
-  ' |__| '
-   _/  \_
-`)
-
-/** Same figure, sweating. Used once the club is up. */
-const DEV_NERVOUS = strip(String.raw`
-   .----.
-  | O  O |'
-  |  ~~  |
-   '----'
-   /|  |\
-  ' |__| '
-   _/  \_
-`)
-
-/** Flat on the floor, X eyes, seeing stars. Same 7 rows, weight at the bottom. */
-const DEV_OUT = strip(String.raw`
-    *  .  *
-      .   *
-
-
-   ______
-  ( x  x )___
-   ‾‾‾‾‾‾   \__
-`)
-
-// ── The robot, by punch pose ───────────────────────────────────────────────
-/**
- * The body is identical in every pose; only the arm and fist move. Rather than
- * hand-align four copies (which is how the arm ended up a column off the first
- * time, and how an earlier draft overwrote the robot's own head), the poses are
- * composed: the body is padded left to reserve columns for the arm, then marks
- * are stamped into a character grid at exact coordinates.
- */
-const BODY = [
-  '', // spare row above the head: the raised club lives here
-  '   .----.',
-  '  |[]  []|',
-  '  | ==== |',
-  "   '----'",
-  '  /|####|\\',
-  "  ' |##| '",
-  '   _|  |_',
-]
-/** Columns reserved to the left of the body for the arm and fist. */
-const ARM_PAD = 5
-
-type Mark = [row: number, col: number, text: string]
-
-function pose(...marks: Mark[]): string {
-  const grid = BODY.map((r) => (' '.repeat(ARM_PAD) + r).split(''))
-  const width = Math.max(...grid.map((g) => g.length)) + 4
-  for (const g of grid) while (g.length < width) g.push(' ')
-  for (const [row, col, text] of marks) {
-    for (let i = 0; i < text.length; i++) grid[row][col + i] = text[i]
+/** Pad every line to the same width so the <pre> box is a known size. */
+function block(art: string): { text: string; width: number; rows: number } {
+  const lines = strip(art).split('\n')
+  const width = Math.max(...lines.map((l) => l.length))
+  return {
+    text: lines.map((l) => l.padEnd(width)).join('\n'),
+    width,
+    rows: lines.length,
   }
-  return grid.map((g) => g.join('').replace(/\s+$/, '')).join('\n')
 }
 
+// ── Fry ────────────────────────────────────────────────────────────────────
+const FRY_CALM = block(String.raw`
+   \ | | /
+   .-------.
+  /  ^   ^  \
+ |     .     |
+ |   \___/   |
+  \_________/
+   /|     |\
+  ' |-----| '
+    |     |
+    |_____|
+    ||   ||
+`)
+
+const FRY_NERVOUS = block(String.raw`
+   \ | | /
+   .-------.
+  /  O   O  \'
+ |     .     |
+ |   \~~~~~/ |
+  \_________/
+   /|     |\
+  ' |-----| '
+    |     |
+    |_____|
+    ||   ||
+`)
+
+/** Flat on his back — the hair spikes turn sideways so the pose reads flat. */
+const FRY_OUT = block(String.raw`
+      *    .    *
+   .      *
+         *
+
+
+   \
+  --.-------.______
+   ( x   x  |  |  \
+  --'-------'--'---'
+   /
+`)
+
+// ── Bender ─────────────────────────────────────────────────────────────────
+/** One static pose. Only his position and his dialogue change. */
+const BENDER = block(String.raw`
+       ( )
+        H
+    .---------.
+   /  _______  \
+  |  | @   @ |  |
+  |  |_______|  |
+   \___________/
+     |       |
+   .-+-------+-.
+  O| :+++++++: |O
+   | :#######: |
+   '-+-------+-'
+     ||     ||
+`)
+
+/** Column of the antenna, so the speech-bubble tail can point at his head. */
+const ANTENNA_COL = BENDER.text.split('\n')[0].indexOf('(')
+
+// ── The speech bubble ──────────────────────────────────────────────────────
+const BUBBLE_W = 32
+
 /**
- * Row 1 of this grid lines up with the developer's head, because both figures
- * are bottom-anchored and the developer's art is one row shorter. That is why
- * the punch lands on row 1.
+ * Draws an ASCII bubble with its tail aimed at Bender's antenna.
+ *
+ * Both the bubble and Bender are anchored by their RIGHT edge, so aligning the
+ * tail is a matter of counting from the right: whatever the bubble's width, the
+ * tail sits the same number of columns from its right edge as the antenna does
+ * from Bender's.
  */
-/** Fist down at its side. */
-const BOT_LOW = pose([6, 5, 'o'])
-/** Fist up at chest height, arm half out. */
-const BOT_MID = pose([5, 4, 'o──'])
-/** Fist raised to head height, cocked. */
-const BOT_HIGH = pose([2, 4, 'o──'])
-/** Arm fully extended, fist through where the developer's head was. */
-const BOT_STRIKE = pose([1, 0, 'o══════'], [2, 6, '\\'])
+function bubble(text: string): string {
+  const inner = BUBBLE_W - 4
+  const lines: string[] = []
+  let cur = ''
+  for (const word of text.split(' ')) {
+    if ((cur + ' ' + word).trim().length > inner) {
+      lines.push(cur.trim())
+      cur = word
+    } else cur = (cur + ' ' + word).trim()
+  }
+  if (cur) lines.push(cur)
+
+  const fromRight = BENDER.width - 1 - ANTENNA_COL
+  const tailIdx = Math.max(1, BUBBLE_W - 1 - fromRight)
+  const bottom = ("'" + '-'.repeat(BUBBLE_W - 2) + "'").split('')
+  bottom[tailIdx] = 'v'
+
+  return [
+    '.' + '-'.repeat(BUBBLE_W - 2) + '.',
+    ...lines.map((l) => '| ' + l.padEnd(inner) + ' |'),
+    bottom.join(''),
+  ].join('\n')
+}
+
+/** What Bender says, by how close the end is. */
+const DIALOGUE: [threshold: number, line: string][] = [
+  [40, 'Hey, meatbag.'],
+  [75, 'I could do your job. Drunk.'],
+  [100, 'Bite my shiny metal ass.'],
+]
+const FINAL_LINE = "IT'S REPLACIN' TIME."
 
 const LOG_LINES = [
   '$ git log --author="you" --since=1.month --oneline | wc -l',
@@ -114,12 +153,12 @@ const LOG_LINES = [
   'logout: session held open by 1 background process (you)',
 ]
 
-/** What the terminal says once the developer is on the floor. */
+/** What the terminal says once Fry is on the floor. */
 const KO_LINES = [
   '$ ',
   'Connection to workstation closed by remote host.',
   '$ ',
-  'agent: taking it from here',
+  'bender: taking it from here, meatbag',
 ]
 
 export function DoomAnimation({ score }: { score: number }) {
@@ -128,7 +167,6 @@ export function DoomAnimation({ score }: { score: number }) {
 
   const t = Math.min(1, Math.max(0, score / 100))
   const knockedOut = score >= 100
-
   const lines = knockedOut ? KO_LINES : LOG_LINES
 
   // Type the current log line out one character at a time, then advance.
@@ -145,25 +183,17 @@ export function DoomAnimation({ score }: { score: number }) {
     return () => clearTimeout(id)
   }, [typed, logIdx, lines])
 
-  // The punch winds up as the robot closes: side → chest → head → thrown.
-  const bot = knockedOut
-    ? BOT_STRIKE
-    : t < 0.4
-      ? BOT_LOW
-      : t < 0.75
-        ? BOT_MID
-        : BOT_HIGH
-  const dev = knockedOut ? DEV_OUT : t >= 0.75 ? DEV_NERVOUS : DEV_CALM
+  const said = knockedOut
+    ? FINAL_LINE
+    : (DIALOGUE.find(([limit]) => score < limit) ?? DIALOGUE[DIALOGUE.length - 1])[1]
+  const fry = knockedOut ? FRY_OUT : t >= 0.75 ? FRY_NERVOUS : FRY_CALM
 
-  // Robot starts at the right edge and closes in. Stops where the swung CLUB
-  // overlaps the developer's head but the two bodies stay clear of each other —
-  // closer than this and the scene collapses into unreadable overlapping ASCII.
-  const botRight = `${6 + t * 50}%`
-  const devOpacity = knockedOut ? 1 : 1 - t * 0.35
+  // Bender closes in from the right. He stops short of Fry — the bodies never
+  // overlap, because two figures sharing columns is unreadable in ASCII.
+  const botRight = `${8 + t * 40}%`
 
   const filled = Math.round(t * 28)
   const bar = '█'.repeat(filled) + '░'.repeat(28 - filled)
-
   const history = lines.slice(Math.max(0, logIdx - 4), logIdx).slice(-4)
 
   return (
@@ -182,15 +212,13 @@ export function DoomAnimation({ score }: { score: number }) {
 
       {/* The scene */}
       <div
-        className="relative h-[188px] overflow-hidden"
+        className="relative h-[272px] overflow-hidden"
         style={knockedOut ? { animation: 'impact 620ms ease-out 1' } : undefined}
         role="img"
         aria-label={
           knockedOut
-            ? 'ASCII scene: the automated replacement has landed its punch and the developer is flat on the floor, seeing stars. Replacement complete.'
-            : `ASCII scene: a developer at a desk with an automated replacement approaching from the right, fist ${
-                t < 0.4 ? 'down at its side' : t < 0.75 ? 'raised to chest height' : 'cocked at head height'
-              }. Replacement progress ${score}%.`
+            ? `ASCII scene: Fry is flat on the floor seeing stars, and the robot says “${FINAL_LINE}”. Replacement complete.`
+            : `ASCII scene: Fry at his desk with a robot approaching from the right, saying “${said}”. Replacement progress ${score}%.`
         }
       >
         {/* Floor */}
@@ -198,36 +226,42 @@ export function DoomAnimation({ score }: { score: number }) {
 
         <pre
           aria-hidden
-          className={`absolute bottom-9 left-[10%] text-[11px] leading-[1.15] transition-opacity duration-700 sm:text-[13px] ${
+          className={`absolute bottom-9 left-[8%] text-[9px] leading-[1.1] transition-opacity duration-700 sm:text-[11px] ${
             knockedOut ? 'text-[var(--color-crit)] glow-crit' : 'text-[var(--color-phos)]'
           }`}
           style={{
-            opacity: devOpacity,
+            opacity: knockedOut ? 1 : 1 - t * 0.3,
             animation: knockedOut ? undefined : 'bob 3.4s ease-in-out infinite',
           }}
         >
-          {dev}
+          {fry.text}
         </pre>
 
+        {/* Bender, and his bubble directly above him — same right anchor, so the
+            tail lines up with his antenna wherever he is. */}
         <pre
           aria-hidden
-          className={`absolute bottom-9 text-[11px] leading-[1.15] transition-all duration-[900ms] ease-out sm:text-[13px] ${
+          className={`absolute bottom-9 text-[9px] leading-[1.1] transition-all duration-[900ms] ease-out sm:text-[11px] ${
             t >= 0.75 ? 'text-[var(--color-crit)] glow-crit' : 'text-[var(--color-amber)]'
           }`}
           style={{ right: botRight }}
         >
-          {bot}
+          {BENDER.text}
+        </pre>
+        <pre
+          aria-hidden
+          className={`absolute text-[9px] leading-[1.1] transition-all duration-[900ms] ease-out sm:text-[11px] ${
+            knockedOut
+              ? 'text-[var(--color-crit)] glow-crit'
+              : t >= 0.75
+                ? 'text-[var(--color-crit)]'
+                : 'text-[var(--color-ink)]'
+          }`}
+          style={{ right: botRight, bottom: 'calc(2.25rem + 14.6em)' }}
+        >
+          {bubble(said)}
         </pre>
 
-        {knockedOut && (
-          <div
-            aria-hidden
-            className="absolute bottom-[63%] left-[19%] text-[17px] font-bold text-[var(--color-amber)] glow-amber"
-            style={{ animation: 'blink 420ms steps(1) 4' }}
-          >
-            ✷
-          </div>
-        )}
         {knockedOut && (
           <div
             aria-hidden
@@ -235,15 +269,6 @@ export function DoomAnimation({ score }: { score: number }) {
             style={{ animation: 'blink 1.1s steps(1) infinite' }}
           >
             ✷ ROLE ELIMINATED
-          </div>
-        )}
-        {!knockedOut && t >= 0.75 && (
-          <div
-            aria-hidden
-            className="absolute bottom-[82%] left-[9%] text-[10px] whitespace-nowrap text-[var(--color-crit)]"
-            style={{ animation: 'blink 1.4s steps(1) infinite' }}
-          >
-            ↓ this one is you
           </div>
         )}
 
