@@ -124,7 +124,7 @@ function Header() {
             <span className="cursor" aria-hidden />
           </h1>
           <p className="mt-2 text-[11px] text-[var(--color-ink-mute)]">
-            A dashboard for watching your own profession from a safe distance.
+            A dashboard for watching your own profession implode from a safe distance.
           </p>
         </div>
         <div className="flex items-center gap-2 text-[9px] tracking-[0.14em] text-[var(--color-ink-faint)]">
