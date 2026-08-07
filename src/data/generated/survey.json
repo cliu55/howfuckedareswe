@@ -1,0 +1,40 @@
+{
+  "provenance": "live",
+  "fetchedAt": "2026-08-07T05:07:42.481Z",
+  "year": "2025",
+  "asOf": "2025",
+  "responses": 49191,
+  "source": "Stack Overflow Developer Survey 2025 — computed from 49,191 responses",
+  "url": "https://survey.stackoverflow.co/2025/ai",
+  "adoption": {
+    "pct": 83.8,
+    "base": 33720
+  },
+  "proDailyPct": 50.6,
+  "favourable": {
+    "pct": 59.7,
+    "base": 33467
+  },
+  "distrust": {
+    "pct": 45.7,
+    "base": 33297
+  },
+  "trust": {
+    "pct": 32.8,
+    "base": 33297
+  },
+  "highlyTrust": {
+    "pct": 3.1,
+    "base": 33297
+  },
+  "notThreat": {
+    "pct": 63.6,
+    "base": 36078
+  },
+  "writingCode": {
+    "mostlyPct": 6.3,
+    "mostlyOrPartlyPct": 47.2,
+    "wontPct": 24.1,
+    "base": 30331
+  }
+}
