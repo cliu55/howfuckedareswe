@@ -233,6 +233,18 @@ The "fucked score" is a weighted blend of agent autonomy (0.35), market
 deterioration (0.35), benchmark saturation (0.15) and AI-authored code share
 (0.15). "Show your work" in the UI prints every step.
 
+### Why the doom date is anchored to the data
+
+`computeDoom` produces a *duration* — months remaining. Turning that into a date
+needs an anchor, and the anchor is the latest observation the model saw
+(`dataAnchor`), never page-load time.
+
+Anchoring to "now" is the obvious-looking choice and it is wrong: the doom date
+walks forward on every page load, so the clock resets instead of counting down
+and would still read the same time remaining a year later. Anchored to the data,
+the doom date is fixed between refreshes — real time eats into it, the dial
+climbs on its own, and the date only moves when new data moves the projection.
+
 ### The dial and the evidence
 
 The meter and the clock show the same quantity, on purpose:

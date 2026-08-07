@@ -24,6 +24,9 @@
  *                    since the epoch over total time from epoch to the doom
  *                    date. It is the clock expressed as a percentage, so the
  *                    sliders move it, and clock-zero is 100 by construction.
+ *                    Because the doom date is anchored to the data rather than
+ *                    to page-load time, this also advances on its own as real
+ *                    time passes — see dataAnchor().
  *   - evidenceScore — the EVIDENCE. A weighted blend of what the data actually
  *                    shows today. Sliders barely move it, because a forecast
  *                    cannot rewrite measurements; it is displayed as context
@@ -89,6 +92,27 @@ const MS_PER_YEAR = 3.15576e10
 const MS_PER_MONTH = MS_PER_YEAR / 12
 /** When the countdown started: ChatGPT's public launch. */
 export const EPOCH = new Date('2022-11-30')
+
+/**
+ * The date the projection is anchored to: the most recent observation the
+ * model actually saw.
+ *
+ * This must NOT be "now". The model outputs a DURATION (months remaining), and
+ * anchoring that to page-load time meant the doom date walked forward on every
+ * refresh — the clock reset instead of counting down, and would have shown the
+ * same time remaining a year later. Anchoring to the data's as-of date fixes
+ * the doom date between refreshes, so real time genuinely eats into it and the
+ * date only moves when new data moves the projection.
+ *
+ * Only the two datasets that feed the model count. News carries a runtime
+ * as-of and would reintroduce the drift.
+ */
+export function dataAnchor(ds: Dataset): Date {
+  const times = [ds.ai.asOf, ds.jobs.asOf]
+    .map((d) => new Date(d).getTime())
+    .filter((t) => Number.isFinite(t))
+  return times.length ? new Date(Math.max(...times)) : new Date()
+}
 
 const last = <T,>(xs: T[]): T => xs[xs.length - 1]
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / (xs.length || 1)
@@ -223,8 +247,10 @@ export function computeDoom(ds: Dataset, p: DoomParams, now = new Date()): DoomR
   const ceilingStretch = 1 / Math.max(p.automationCeiling, 0.01)
   const monthsRemaining = Math.max(0, (monthsToCapability + effectiveLag) * ceilingStretch)
 
-  const capabilityDate = addMonths(now, monthsToCapability)
-  const doomDate = addMonths(now, monthsRemaining)
+  // Anchored to the data, not to `now` — see dataAnchor().
+  const anchor = dataAnchor(ds)
+  const capabilityDate = addMonths(anchor, monthsToCapability)
+  const doomDate = addMonths(anchor, monthsRemaining)
 
   // --- 4a. The score, NOW (empirical) --------------------------------------
   const startHorizon = ai.timeHorizon.points[0].v
@@ -246,11 +272,12 @@ export function computeDoom(ds: Dataset, p: DoomParams, now = new Date()): DoomR
   })
 
   // --- 4b. The dial ---------------------------------------------------------
-  // Elapsed share of the total runway. The epoch anchors "when the countdown
-  // started"; ChatGPT's launch is the least arguable candidate.
+  // Share of the runway (ChatGPT's launch → the projected doom date) that real
+  // time has already eaten. Because both ends are fixed between data refreshes,
+  // this creeps up on its own and reaches exactly 100 when the clock hits zero.
   const elapsedMonths = Math.max(0, (now.getTime() - EPOCH.getTime()) / MS_PER_MONTH)
-  const runwayMonths = elapsedMonths + monthsRemaining
-  const fuckedScore = Math.round(clamp(elapsedMonths / Math.max(runwayMonths, 1e-9)) * 100)
+  const runwayMonths = Math.max((doomDate.getTime() - EPOCH.getTime()) / MS_PER_MONTH, 1e-9)
+  const fuckedScore = Math.round(clamp(elapsedMonths / runwayMonths) * 100)
   const evidenceScore = scoreOf(nowInd)
 
   const workings = [
@@ -264,8 +291,10 @@ export function computeDoom(ds: Dataset, p: DoomParams, now = new Date()): DoomR
     `ceiling_stretch    = 1 / ${p.automationCeiling} = ${ceilingStretch.toFixed(2)}`,
     `months_remaining   = (${monthsToCapability.toFixed(1)} + ${effectiveLag.toFixed(1)}) × ${ceilingStretch.toFixed(2)} = ${monthsRemaining.toFixed(1)} mo`,
     ``,
+    `anchor              = ${anchor.toISOString().slice(0, 10)} (latest observation; doom date is fixed to this)`,
+    `doom_date           = anchor + ${monthsRemaining.toFixed(1)} mo = ${doomDate.toISOString().slice(0, 10)}`,
     `elapsed_since_epoch = ${elapsedMonths.toFixed(1)} mo (epoch = ChatGPT launch, 2022-11-30)`,
-    `fucked_score        = ${elapsedMonths.toFixed(1)} / (${elapsedMonths.toFixed(1)} + ${monthsRemaining.toFixed(1)}) = ${fuckedScore}%`,
+    `fucked_score        = ${elapsedMonths.toFixed(1)} / ${runwayMonths.toFixed(1)} = ${fuckedScore}%`,
     `evidence_today      = Σ(observed × weight) = ${evidenceScore}%`,
   ]
 
