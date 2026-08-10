@@ -1,6 +1,6 @@
 {
   "provenance": "live",
-  "fetchedAt": "2026-08-07T06:15:45.662Z",
+  "fetchedAt": "2026-08-10T08:03:36.479Z",
   "asOf": "2026-08-01",
   "source": "HN \"Who is hiring?\" threads — share of posts mentioning the term (92 months)",
   "url": "https://news.ycombinator.com/submitted?id=whoishiring",
@@ -371,7 +371,7 @@
     },
     {
       "t": "2026-08-01",
-      "v": 0.018
+      "v": 0.019
     }
   ],
   "seniorShare": [
@@ -741,7 +741,7 @@
     },
     {
       "t": "2026-08-01",
-      "v": 0.274
+      "v": 0.279
     }
   ],
   "raw": [
@@ -1287,15 +1287,15 @@
     },
     {
       "t": "2026-07-01",
-      "total": 434,
+      "total": 433,
       "junior": 8,
       "senior": 127
     },
     {
       "t": "2026-08-01",
-      "total": 285,
-      "junior": 5,
-      "senior": 78
+      "total": 315,
+      "junior": 6,
+      "senior": 88
     }
   ]
 }
