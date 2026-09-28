@@ -1,7 +1,7 @@
 {
   "provenance": "live",
-  "fetchedAt": "2026-09-21T12:44:46.878Z",
-  "asOf": "2026-09-11",
+  "fetchedAt": "2026-09-28T13:50:25.218Z",
+  "asOf": "2026-09-18",
   "source": "Indeed Hiring Lab job postings tracker (Feb 2020 = 100)",
   "url": "https://github.com/hiring-lab/job_postings_tracker",
   "softwareDev": [
@@ -322,8 +322,8 @@
       "v": 74.75
     },
     {
-      "t": "2026-09-11",
-      "v": 76.62
+      "t": "2026-09-18",
+      "v": 77.32
     }
   ],
   "allJobs": [
@@ -644,8 +644,8 @@
       "v": 101.94
     },
     {
-      "t": "2026-09-11",
-      "v": 103.15
+      "t": "2026-09-18",
+      "v": 103.45
     }
   ]
 }
