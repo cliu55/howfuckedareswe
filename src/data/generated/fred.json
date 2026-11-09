@@ -1,7 +1,7 @@
 {
   "provenance": "live",
-  "fetchedAt": "2026-11-02T15:45:09.034Z",
-  "asOf": "2026-09-01",
+  "fetchedAt": "2026-11-09T16:12:58.634Z",
+  "asOf": "2026-10-01",
   "source": "BLS via FRED (St. Louis Fed)",
   "url": "https://fred.stlouisfed.org",
   "unemployment": [
@@ -328,6 +328,10 @@
     {
       "t": "2026-09-01",
       "v": 5.27
+    },
+    {
+      "t": "2026-10-01",
+      "v": 5.22
     }
   ],
   "unemploymentSeriesId": "LNU04032237",
@@ -698,11 +702,15 @@
     },
     {
       "t": "2026-08-01",
-      "v": 2359.8
+      "v": 2357.6
     },
     {
       "t": "2026-09-01",
-      "v": 2355.4
+      "v": 2350.9
+    },
+    {
+      "t": "2026-10-01",
+      "v": 2354.1
     }
   ],
   "techEmploymentSeriesId": "CES6054150001",
@@ -1074,6 +1082,10 @@
     {
       "t": "2026-09-01",
       "v": 208
+    },
+    {
+      "t": "2026-10-01",
+      "v": 171
     }
   ],
   "unemploymentLevelSeriesId": "LNU03032237",
@@ -1445,6 +1457,10 @@
     {
       "t": "2026-09-01",
       "v": 11.5
+    },
+    {
+      "t": "2026-10-01",
+      "v": 11.9
     }
   ],
   "medianWeeksUnemployedSeriesId": "UEMPMED"
